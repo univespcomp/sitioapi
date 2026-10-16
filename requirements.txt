@@ -2,3 +2,5 @@ pandas
 numpy
 scikit-learn
 psycopg[binary]
+python-dotenv
+requests
