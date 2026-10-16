@@ -1,0 +1,12 @@
+services:
+  dashboard-inmet:
+    build: .
+    container_name: previsao-inmet-app
+    ports:
+      - "3000:8000"
+    volumes:
+      - .:/app
+    environment:
+      PYTHONUNBUFFERED: "1"
+      DATABASE_URL: ${DATABASE_URL:-}
+      API_TOKEN: ${API_TOKEN:-}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão Meteorológica INMET - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+    <div class="background-mesh"></div>
+    <div class="container">
+        <header>
+            <h1>Previsão do Tempo <span class="highlight">D+1</span></h1>
+            <p>Estação INMET A707 - Presidente Prudente/SP</p>
+        </header>
+
+        <main>
+            <!-- Hero KPIs -->
+            <section class="kpi-grid">
+                <div class="kpi-card glass">
+                    <h3>Previsão para Amanhã</h3>
+                    <div class="kpi-value" id="kpi-temp-amanha">-- °C</div>
+                    <div class="kpi-subtitle" id="kpi-data-amanha">Data Alvo: --/--/----</div>
+                </div>
+                <div class="kpi-card glass">
+                    <h3>Temperatura Atual (Média)</h3>
+                    <div class="kpi-value" id="kpi-temp-hoje">-- °C</div>
+                    <div class="kpi-subtitle" id="kpi-data-hoje">Data Base: --/--/----</div>
+                </div>
+                <div class="kpi-card glass">
+                    <h3>Umidade Média (Base)</h3>
+                    <div class="kpi-value" id="kpi-umid-hoje">-- %</div>
+                    <div class="kpi-subtitle">Observada</div>
+                </div>
+                <div class="kpi-card glass">
+                    <h3>Última Atualização</h3>
+                    <div class="kpi-value kpi-small" id="kpi-ultima-att">--</div>
+                    <div class="kpi-subtitle">Entrada: <span id="kpi-metodo">--</span></div>
+                </div>
+            </section>
+
+            <!-- Charts -->
+            <section class="charts-grid">
+                <div class="chart-card glass">
+                    <h2>Histórico de Previsões (Recentes)</h2>
+                    <div class="chart-container">
+                        <canvas id="previsaoChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card glass">
+                    <h2>Condições Climáticas Recentes</h2>
+                    <div class="chart-container">
+                        <canvas id="condicoesChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Dashboard Operacional - Desenvolvido como Projeto Integrador IV. Dados fornecidos pelo INMET.</p>
+        </footer>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
