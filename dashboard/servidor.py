@@ -271,6 +271,11 @@ def testar_conexao() -> str:
     with conectar() as conexao:
         return conexao.execute("SELECT version()").fetchone()[0]
 
+def consultar(sql, params=()):
+    with conectar() as conexao:
+        with conexao.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(sql, params)
+            return cursor.fetchall()
 
 # --------------------------------------------------------------------------
 # Servidor HTTP
@@ -299,6 +304,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        self.send_header("Access-Control-Allow-Origin", os.environ.get("CORS_ORIGIN", "*"))
         super().end_headers()
 
     # ---- roteamento -------------------------------------------------------
@@ -315,6 +321,10 @@ class Handler(SimpleHTTPRequestHandler):
             return self.servir_csv(ROTAS_CSV[caminho]())
         if caminho in {"/dashboard", "/dashboard/"} or caminho.startswith("/dashboard/"):
             return super().do_GET()
+        if caminho == "/api/previsoes":
+            return self.listar("previsoes", "data_prevista")
+        if caminho == "/api/observacoes":
+            return self.listar("observacoes_diarias", "data")
         self.send_error(404)
 
     do_POST = do_GET  # permite disparar o pipeline por POST também
@@ -373,6 +383,25 @@ class Handler(SimpleHTTPRequestHandler):
             EXECUTION_LOCK.release()
 
     # ---- helpers de resposta ----------------------------------------------
+
+    def listar(self, tabela, coluna_data):
+        params = parse_qs(urlsplit(self.path).query)
+        try:
+            limite = max(1, min(int(params.get("limite", ["90"])[0]), 1000))
+        except ValueError:
+            limite = 90
+        try:
+            # Pega os N mais recentes e devolve em ordem cronológica (bom para gráficos).
+            linhas = consultar(
+                f"SELECT * FROM (SELECT * FROM {tabela} WHERE estacao = %s "
+                f"ORDER BY {coluna_data} DESC LIMIT %s) t ORDER BY {coluna_data} ASC",
+                (pipeline.ESTACAO, limite),
+            )
+        except Exception:
+            log.exception("Falha ao consultar %s", tabela)
+            return self.responder_json(503, {"ok": False, "erro": "Banco indisponível."})
+        self.responder_json(200, {"ok": True, "dados": linhas})
+
     def servir_csv(self, arquivo: Path):
         if not arquivo.exists():
             return self.send_error(404)
@@ -384,7 +413,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(corpo)
 
     def responder_json(self, status: int, dados: dict):
-        corpo = json.dumps(dados, ensure_ascii=False).encode("utf-8")
+        corpo = json.dumps(dados, ensure_ascii=False, default=str).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(corpo)))
