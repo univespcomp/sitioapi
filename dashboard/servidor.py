@@ -15,6 +15,15 @@ from psycopg.rows import dict_row
 import psycopg
 from dotenv import load_dotenv
 
+#---------------------------------------------------------------------------
+#CORS
+#---------------------------------------------------------------------------
+CORS_ORIGINS = {
+    o.strip().rstrip("/")
+    for o in os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+    if o.strip()
+}
+
 # --------------------------------------------------------------------------
 # Configuração
 # --------------------------------------------------------------------------
@@ -304,8 +313,22 @@ class Handler(SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
-        self.send_header("Access-Control-Allow-Origin", os.environ.get("CORS_ORIGIN", "*"))
+        origem = self.headers.get("Origin", "")
+        if origem in CORS_ORIGINS:
+            self.send_header("Access-Control-Allow-Origin", origem)
+        self.send_header("Vary", "Origin")
         super().end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            self.headers.get("Access-Control-Request-Headers", "*"),
+        )
+        self.send_header("Access-Control-Max-Age", "86400")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     # ---- roteamento -------------------------------------------------------
     def do_GET(self):
